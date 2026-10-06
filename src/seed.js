@@ -8,6 +8,7 @@ export const defaultSettings = {
   about_title: "A finance partner, not just a filing desk.",
   about_text: "We combine practical accounting, tax discipline and business insight to help clients make better financial decisions and stay organised throughout the year.",
   phone: "+91 98765 43210",
+  whatsapp: "919876543210", // digits only, with country code (no + or spaces)
   email: "hello@royassociates.in",
   address: "Siliguri, West Bengal, India",
   working_hours: "Mon – Sat, 10:00 AM – 7:00 PM",
