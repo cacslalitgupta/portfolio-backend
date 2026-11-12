@@ -28,28 +28,18 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'"],
-        styleSrc: [
-          "'self'",
-          "'unsafe-inline'",
-          "https://fonts.googleapis.com",
-        ],
-        fontSrc: [
-          "'self'",
-          "https://fonts.gstatic.com",
-        ],
-        imgSrc: [
-          "'self'",
-          "data:",
-          "https:",
-        ],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https:"],
         connectSrc: [
           "'self'",
           "https://calalitgupta.in",
           "https://www.calalitgupta.in",
+          "https://api.calalitgupta.in",
         ],
       },
     },
-  })
+  }),
 );
 
 // --------------------------------------------------
@@ -59,6 +49,7 @@ app.use(
 const allowedOrigins = [
   "https://calalitgupta.in",
   "https://www.calalitgupta.in",
+  "https://api.calalitgupta.in",
   "http://localhost:5173",
 ];
 
@@ -75,25 +66,13 @@ app.use(
         return callback(null, true);
       }
 
-      return callback(
-        new Error(`CORS blocked origin: ${origin}`)
-      );
+      return callback(new Error(`CORS blocked origin: ${origin}`));
     },
 
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS",
-    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-    ],
-  })
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
 );
 
 // --------------------------------------------------
@@ -103,7 +82,7 @@ app.use(
 app.use(
   express.json({
     limit: "100kb",
-  })
+  }),
 );
 
 // --------------------------------------------------
@@ -141,9 +120,7 @@ app.use("/api", (_req, res) => {
 if (fs.existsSync(dist)) {
   app.use(express.static(dist));
   app.get("*", (_req, res) => {
-    res.sendFile(
-      path.join(dist, "index.html")
-    );
+    res.sendFile(path.join(dist, "index.html"));
   });
 }
 
@@ -173,17 +150,13 @@ async function startServer() {
     await connectDb();
     console.log("MongoDB connected.");
     app.listen(PORT, () => {
+      console.log(`CA firm API running on port ${PORT}`);
       console.log(
-        `CA firm API running on port ${PORT}`
-      );
-      console.log(
-        `Client origin: ${process.env.CLIENT_ORIGIN || "not configured"}`
+        `Client origin: ${process.env.CLIENT_ORIGIN || "not configured"}`,
       );
     });
   } catch (error) {
-    console.error(
-      "Failed to start CA firm API:"
-    );
+    console.error("Failed to start CA firm API:");
     console.error(error);
     process.exit(1);
   }

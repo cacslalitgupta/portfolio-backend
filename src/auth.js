@@ -15,8 +15,8 @@ const sha = (v) => crypto.createHash("sha256").update(String(v)).digest();
 export const safeEqual = (a, b) => crypto.timingSafeEqual(sha(a), sha(b));
 
 export function checkCredentials(email, password) {
-  const e = process.env.ADMIN_EMAIL || "admin@example.com";
-  const p = process.env.ADMIN_PASSWORD || "Admin@123";
+  const e = process.env.ADMIN_EMAIL || "raja@gmail.com";
+  const p = process.env.ADMIN_PASSWORD || "Raja@123";
   // evaluate both so timing doesn't reveal which one was wrong
   const okEmail = safeEqual(String(email || "").toLowerCase(), e.toLowerCase());
   const okPass = safeEqual(password || "", p);
