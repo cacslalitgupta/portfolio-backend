@@ -24,15 +24,6 @@ export const Service = model("Service", new Schema({
   sort_order: { type: Number, default: 99 }
 }, opts));
 
-export const Testimonial = model("Testimonial", new Schema({
-  name: { type: String, required: true, trim: true },
-  role: { type: String, default: "", trim: true },
-  quote: { type: String, required: true, trim: true },
-  rating: { type: Number, default: 5, min: 1, max: 5 },
-  published: { type: Boolean, default: true },
-  sort_order: { type: Number, default: 99 }
-}, opts));
-
 export const Faq = model("Faq", new Schema({
   question: { type: String, required: true, trim: true },
   answer: { type: String, required: true, trim: true },

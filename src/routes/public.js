@@ -1,7 +1,7 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
-import { Service, Testimonial, Faq, Message } from "../models.js";
+import { Service, Faq, Message } from "../models.js";
 import { getSettings } from "../seed.js";
 import { createCaptcha, verifyCaptcha } from "../captcha.js";
 import { wrap, parseBody } from "./crud.js";
@@ -10,14 +10,13 @@ const router = Router();
 const order = { sort_order: 1, createdAt: 1 };
 
 router.get("/site", wrap(async (_req, res) => {
-  const [settings, services, testimonials, faqs] = await Promise.all([
+  const [settings, services, faqs] = await Promise.all([
     getSettings(),
     Service.find({ published: true }).sort(order),
-    Testimonial.find({ published: true }).sort(order),
     Faq.find({ published: true }).sort(order)
   ]);
   res.set("Cache-Control", "no-store");
-  res.json({ settings, services, testimonials, faqs });
+  res.json({ settings, services, faqs });
 }));
 
 router.get("/captcha", (_req, res) => res.json(createCaptcha()));
@@ -32,7 +31,7 @@ const contactSchema = z.object({
   message: z.string().trim().min(10).max(3000),
   captchaId: z.string().min(5).max(30),
   captchaAnswer: z.string().min(1).max(10),
-  website: z.string().max(0).optional().or(z.literal("")) // honeypot
+  website: z.string().max(0).optional().or(z.literal(""))
 });
 
 router.post("/contact", contactLimiter, wrap(async (req, res) => {

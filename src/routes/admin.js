@@ -3,7 +3,7 @@ import rateLimit from "express-rate-limit";
 import mongoose from "mongoose";
 import { z } from "zod";
 import { checkCredentials, signAdmin, requireAdmin } from "../auth.js";
-import { Setting, Service, Testimonial, Faq, Message } from "../models.js";
+import { Setting, Service, Faq, Message } from "../models.js";
 import { defaultSettings, getSettings } from "../seed.js";
 import { mountCrud, wrap, parseBody } from "./crud.js";
 
@@ -20,13 +20,15 @@ router.use(requireAdmin);
 
 /* ---------- Dashboard ---------- */
 router.get("/dashboard", wrap(async (_req, res) => {
-  const [services, testimonials, faqs, messages, newMessages, recent] = await Promise.all([
-    Service.countDocuments(), Testimonial.countDocuments(), Faq.countDocuments(),
-    Message.countDocuments(), Message.countDocuments({ status: "new" }),
+  const [services, faqs, messages, newMessages, recent] = await Promise.all([
+    Service.countDocuments(),
+    Faq.countDocuments(),
+    Message.countDocuments(),
+    Message.countDocuments({ status: "new" }),
     Message.find().sort({ createdAt: -1 }).limit(5)
   ]);
   res.json({
-    stats: { services, testimonials, faqs, messages, newMessages },
+    stats: { services, faqs, messages, newMessages },
     recent,
     db: mongoose.connection.readyState === 1 ? "connected" : "disconnected"
   });
@@ -68,14 +70,6 @@ mountCrud(router, "services", Service, z.object({
   featured: z.boolean().default(false),
   ...flags
 }), "Service");
-
-mountCrud(router, "testimonials", Testimonial, z.object({
-  name: z.string().trim().min(2).max(80),
-  role: z.string().trim().max(120).default(""),
-  quote: z.string().trim().min(10).max(600),
-  rating: z.coerce.number().int().min(1).max(5).default(5),
-  ...flags
-}), "Testimonial");
 
 mountCrud(router, "faqs", Faq, z.object({
   question: z.string().trim().min(5).max(200),
