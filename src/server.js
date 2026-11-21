@@ -31,6 +31,7 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:"],
+        frameSrc: ["'self'", "https://www.google.com"],
         connectSrc: [
           "'self'",
           "https://calalitgupta.in",
@@ -118,9 +119,54 @@ app.use("/api", (_req, res) => {
 // --------------------------------------------------
 
 if (fs.existsSync(dist)) {
-  app.use(express.static(dist));
-  app.get("*", (_req, res) => {
-    res.sendFile(path.join(dist, "index.html"));
+  // Canonical host: send www -> apex with a permanent redirect.
+  app.use((req, res, next) => {
+    if (req.hostname === "www.calalitgupta.in") {
+      return res.redirect(301, `https://calalitgupta.in${req.originalUrl}`);
+    }
+    next();
+  });
+
+  // Hashed build assets are immutable; HTML must always revalidate.
+  app.use(
+    express.static(dist, {
+      index: false,
+      redirect: false,
+      setHeaders(res, filePath) {
+        if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        } else if (filePath.endsWith(".html")) {
+          res.setHeader("Cache-Control", "no-cache");
+        } else {
+          res.setHeader("Cache-Control", "public, max-age=604800");
+        }
+      },
+    }),
+  );
+
+  // Routes prerendered by client/scripts/prerender.mjs
+  const routesFile = path.join(dist, "routes.json");
+  const routes = new Set(fs.existsSync(routesFile) ? JSON.parse(fs.readFileSync(routesFile, "utf8")) : ["/"]);
+  const send = (res, file, status = 200) => {
+    res.status(status).set("Cache-Control", "no-cache").sendFile(path.join(dist, file));
+  };
+
+  app.get("*", (req, res) => {
+    // One canonical URL per page: strip trailing slashes.
+    if (req.path.length > 1 && req.path.endsWith("/")) {
+      const query = req.url.slice(req.path.length);
+      return res.redirect(301, req.path.replace(/\/+$/, "") + query);
+    }
+    if (req.path === "/admin" || req.path.startsWith("/admin/")) {
+      res.set("X-Robots-Tag", "noindex, nofollow");
+      return send(res, "index.html");
+    }
+    if (routes.has(req.path)) {
+      return send(res, req.path === "/" ? "index.html" : `${req.path.slice(1)}/index.html`);
+    }
+    // Unknown URL: real 404 status (not a soft-404 with the home page).
+    const has404 = fs.existsSync(path.join(dist, "404.html"));
+    return send(res, has404 ? "404.html" : "index.html", 404);
   });
 }
 
